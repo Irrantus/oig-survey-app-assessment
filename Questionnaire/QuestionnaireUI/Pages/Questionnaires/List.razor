@@ -1,0 +1,62 @@
+﻿@page "/questionnaires"
+@using Common.Models.ViewModels;
+@using QuestionnaireUI.Data;
+@using QuestionnaireUI.Data.Services;
+
+<h3>Questionnaires</h3>
+
+
+    <button type="button" class="btn btn-info">Create</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">StartDate</th>
+                <th scope="col">EndDate</th>
+                <th scope="col">Controls</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (QuestionnairesList.Count > 0)
+{
+                @foreach (var product in QuestionnairesList)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @product.Name
+                        </td>
+                        <td class="align-middle">
+                            @product.StartDate.ToString("dd/MM/yyyy hh:mm:ss")
+                        </td>
+                        <td class="align-middle">
+                            @product.EndDate.ToString("dd/MM/yyyy hh:mm:ss")
+                        </td>
+                        <td class="align-middle">
+                            <button type="button" class="btn btn-info">Update</button>
+                        </td>
+    @*                    <td class="align-middle">
+                            <button type="button" class="btn btn-danger">Delete</button>
+                        </td>*@
+                    </tr>
+                }
+            }
+            else
+            {
+                <span>
+                    Loading products...
+                </span>
+            }
+        </tbody>
+    </table>
+
+@code {
+    public List<QuestionnaireViewModel> QuestionnairesList { get; set; } = new List<QuestionnaireViewModel>();
+
+    [Inject]
+    public IQuestionnaireService questionnaireService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        QuestionnairesList = await questionnaireService.GetQuestionnaires();
+    }
+}
