@@ -1,5 +1,4 @@
 ﻿using Common.Models;
-using QuestionnaireApi.Data.Entities;
 using QuestionnaireApi.Models.Dtos;
 
 namespace QuestionnaireApi.Repositories
@@ -8,7 +7,9 @@ namespace QuestionnaireApi.Repositories
     {
         public IEnumerable<QuestionnaireDto> GetQuestionnaires(SortParams sortParams);
         public QuestionnaireDto GetQuestionnaireById(int id);
+        public int GetQuestionnairesCountByOwnerId(string ownerId);
         public QuestionnaireDto CreateQuestionnaire(CreateQuestionnaireDto entity);
         public QuestionnaireDto UpdateQuestionnaire(UpdateQuestionnaireDto entity);
+        public bool CloseQuestionnaire(int id);
     }
 }

@@ -1,0 +1,55 @@
+﻿@page "/users"
+@using Common.Models.ViewModels;
+@using QuestionnaireUI.Data.Services;
+
+<h3>Users</h3>
+
+
+@if (!IsRequestPending)
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">UserId</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Questionnaires</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in UsersList)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @user.UserId
+                        </td>
+                        <td class="align-middle">
+                            @user.Email
+                        </td>
+                        <td class="align-middle">
+                            @user.QuestionnairesCount
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+}
+else
+{
+    <span>Loading users...</span>
+}
+
+@code {
+    private bool IsRequestPending = false;
+
+    [Inject]
+    private IUserService _userService { get; set; }
+
+    private List<UserViewModel> UsersList = new List<UserViewModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsRequestPending = true;
+        UsersList = await _userService.GetUsersAsync();
+        IsRequestPending = false;
+    }
+}

@@ -1,0 +1,172 @@
+﻿@page "/questionnaires"
+@using Common.Models.Helpers;
+@using Common.Models.ViewModels;
+@using Common.Models.ViewModels.Questionnaire;
+@using Common;
+@using QuestionnaireUI.Data.Models;
+@using Common.Enums;
+@using Common.Models;
+@using QuestionnaireUI.Data;
+@using QuestionnaireUI.Data.Services;
+@using QuestionnaireUI.Extentions;
+@using QuestionnaireUI.Shared.CustomComponents
+
+@inject CustomAuthStateProvider stateProvider
+
+<h3>Questionnaires</h3>
+
+@if (!IsRequestPending)
+{
+    <a href="create" type="button" class="btn btn-primary">Create new Questionnaire</a>
+        <table class="table">
+            <thead>
+                <tr>
+                    @foreach (var column in Columns)
+                    {
+                        @if (column.Name != nameof(QuestionnaireViewModel.OwnerId)
+                        || CurrentUserIsAdmin)
+                        {
+                            <SortedColumn Column="@column" SortMethod="Sort" />
+                        }
+                    }
+                    <th scope="col">Controls</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var questionnaire in QuestionnairesList)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @questionnaire.Name
+                        </td>
+                        <td class="align-middle">
+                            @questionnaire.StartDate.ToString(Constants.dateTimeFormat)
+                        </td>
+                        <td class="align-middle">
+                            @questionnaire.EndDate.ToString(Constants.dateTimeFormat)
+                        </td>
+                        @if (CurrentUserIsAdmin)
+                        {
+                            <td class="align-middle">
+                                @questionnaire.OwnerId
+                            </td>
+                        }
+                        <td class="align-middle">
+                            <a href="questionnaire/@questionnaire.Id" type="button" class="btn btn-info">Details</a>
+                            @if (CurrentUserId == questionnaire.OwnerId)
+                            {
+                                @if (questionnaire.IsUpdatable())
+                                {
+                                    <a href="update/@questionnaire.Id" type="button" class="btn btn-secondary">Update</a>
+                                }
+                                @if (questionnaire.IsClosable())
+                                {
+                                    <button type="button" class="btn btn-danger" onclick="@(() => Close(questionnaire.Id))">Close</button>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+}
+else
+{
+    <span>Loading questionnaires...</span>
+}
+
+@inject NavigationManager navigationManager
+
+@code {
+    private List<QuestionnaireViewModel> QuestionnairesList = new List<QuestionnaireViewModel>();
+
+    [Inject]
+    private IQuestionnaireService _questionnaireService { get; set; }
+
+    private bool IsRequestPending = false;
+
+    public QuestionnaireList()
+    {
+        Columns = new List<Column>
+        {
+            new Column{Name = nameof(QuestionnaireViewModel.Name)},
+            new Column{Name = nameof(QuestionnaireViewModel.StartDate)},
+            new Column{Name = nameof(QuestionnaireViewModel.EndDate)},
+            new Column{Name = nameof(QuestionnaireViewModel.OwnerId)}
+        };
+
+        CurrentSortColumn = Columns.FirstOrDefault();
+    }
+
+    private bool IsSortedAscending = true;
+    private string SortStyle = string.Empty;
+
+    private List<Column> Columns;
+
+    private Column? CurrentSortColumn;
+
+    private string CurrentUserId = string.Empty;
+    private bool CurrentUserIsAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentUserId = stateProvider.GetUserId();
+        CurrentUserIsAdmin = stateProvider.IsAdmin();
+
+        IsRequestPending = true;
+        QuestionnairesList = await _questionnaireService.GetQuestionnairesAsync();
+        IsRequestPending = false;
+    }
+
+    private async Task Sort(Column column)
+    {
+        IsRequestPending = true;
+        var sortParams = new SortParams
+        {
+            SortBy = column.Name
+        };
+
+        UpdateSortStyle(column);
+
+        sortParams.SortDirection = IsSortedAscending ? SortDirectionEnum.Ascending : SortDirectionEnum.Descending;
+
+        QuestionnairesList = await _questionnaireService.GetQuestionnairesAsync(sortParams);
+        IsRequestPending = false;
+    }
+
+    private void UpdateSortStyle(Column column)
+    {
+        if (CurrentSortColumn.Name != column.Name)
+        {
+            CurrentSortColumn.SortStyle = string.Empty;
+            IsSortedAscending = true;
+        }
+        else
+        {
+            IsSortedAscending = !IsSortedAscending;
+        }
+
+        CurrentSortColumn = column;
+
+        if (IsSortedAscending)
+        {
+            CurrentSortColumn.SortStyle = "oi-caret-top";
+        }
+        else
+        {
+            CurrentSortColumn.SortStyle = "oi-caret-bottom";
+        }
+    }
+
+    private async Task Close(int id)
+    {
+        IsRequestPending = true;
+        var response = await _questionnaireService.CloseQuestionnaire(id);
+
+        if (response)
+        {
+            navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+        }
+        IsRequestPending = false;
+    }
+}

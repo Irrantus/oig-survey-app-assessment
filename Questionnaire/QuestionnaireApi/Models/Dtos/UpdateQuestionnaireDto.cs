@@ -1,5 +1,5 @@
 ﻿using Common.Enums;
-using Common.Models.ViewModels;
+using Common.Models.ViewModels.Questionnaire;
 using QuestionnaireApi.Data.Entities;
 
 namespace QuestionnaireApi.Models.Dtos
@@ -21,43 +21,16 @@ namespace QuestionnaireApi.Models.Dtos
             Status = model.Status;
         }
 
-        public Questionnaire ToEntity()
-        {
-            return new Questionnaire            {
-                Id = Id,
-                Name = Name,
-                StartDate = StartDate,
-                EndDate = EndDate,
-                Status = Status
-            };
-        }
-
         public bool Valid(QuestionnaireDto questionnaire)
         {
+            if (Status == StatusEnum.Completed || Status == StatusEnum.Active)
+            {
+                return false;
+            }
+
             if (StartDate < questionnaire.StartDate || EndDate < questionnaire.EndDate)
             {
                 return false;
-            }
-
-            if (Status == StatusEnum.Completed && questionnaire.EndDate > DateTime.Now)
-            {
-                return false;
-            }
-
-            switch (Status)
-            {
-                case StatusEnum.Scheduled:
-                    if (questionnaire.Status != StatusEnum.Concept)
-                    {
-                        return false;
-                    }
-                    break;
-                case StatusEnum.Completed:
-                    if(questionnaire.Status != StatusEnum.Scheduled)
-                    {
-                        return false;
-                    }
-                    break;
             }
 
             return true;

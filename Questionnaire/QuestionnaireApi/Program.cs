@@ -1,3 +1,4 @@
+using Common.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,8 +14,8 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    options.Authority = builder.Configuration.GetSection("Auth0Settings").GetValue<string>("Authority");
-    options.Audience = builder.Configuration.GetSection("Auth0Settings").GetValue<string>("Audience");
+    options.Authority = builder.Configuration["Auth0Settings:Authority"];
+    options.Audience = builder.Configuration["Auth0Settings:Audience"];
 });
 
 // Add services to the container.
@@ -22,13 +23,19 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(builder.Configuration.GetConnectionString("ConnectionString")));
 
 builder.Services.AddTransient<IQuestionnaireService, QuestionnaireService>();
+builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IQuestionnaireRepository, QuestionnaireRepository>();
 
+builder.Services.AddTransient<IQuestionnaireRepository, QuestionnaireRepository>();
+
+builder.Services.Configure<Auth0Settings>(builder.Configuration.GetSection("Auth0Settings"));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

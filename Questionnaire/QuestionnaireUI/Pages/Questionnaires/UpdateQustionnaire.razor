@@ -1,0 +1,112 @@
+﻿@page "/update/{Id:int}"
+@using Common.Enums;
+@using Common.Models.Helpers;
+@using Common.Models.ViewModels.Questionnaire;
+@using QuestionnaireUI.Data.Helpers;
+@using QuestionnaireUI.Data.Models;
+@using QuestionnaireUI.Data.Services;
+@using QuestionnaireUI.Extentions;
+@using QuestionnaireUI.Shared.CustomComponents
+
+<BackButton Link="questionnaires" />
+@if (!IsRequestPending)
+{
+    <h3>Update @Questionnaire.Name</h3>
+    <hr />
+
+
+    <EditForm Model="@UpdateQuestionnaireModel" OnValidSubmit=@(() => Submit())>
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group row">
+            <label for="name">Name</label>
+            <InputText id="name" disabled class="form-control" @bind-Value="Questionnaire.Name" />
+        </div>
+        <div class="form-group row">
+            <label for="startDate">Start date</label>
+            <InputDate Type="InputDateType.DateTimeLocal"
+                id="startDate" class="form-control"
+                   @bind-Value="UpdateQuestionnaireModel.StartDate" />
+            <ValidationMessage For="() => UpdateQuestionnaireModel.StartDate" />
+        </div>
+        <div class="form-group row">
+            <label for="endDate">End date</label>
+            <InputDate Type="InputDateType.DateTimeLocal"
+                id="endDate" class="form-control"
+                   @bind-Value="UpdateQuestionnaireModel.EndDate" />
+            <ValidationMessage For="() => UpdateQuestionnaireModel.EndDate" />
+        </div>
+        @if (Questionnaire.Status == StatusEnum.Scheduled)
+        {
+            <div class="form-group row">
+                <label for="status">Status</label>
+                <InputText disabled id="status" class="form-control"
+                   @bind-Value="Questionnaire.StatusString" />
+            </div>
+        }
+        else
+        {
+            <label for="status">Status</label>
+            <InputSelect id="status" class="form-control"
+                 @bind-Value="UpdateQuestionnaireModel.Status">
+                @foreach (var status in Statuses)
+                {
+                    <option value=@status>@status</option>
+                }
+            </InputSelect>
+        }
+        <br />
+        <input type="submit" class="btn btn-primary" value="Save" />
+    </EditForm>
+}
+else
+{
+    <span>Loading Questionnaire</span>
+}
+
+@inject CustomAuthStateProvider stateProvider
+@inject NavigationManager navigationManager
+
+@code {
+    [Parameter] 
+    public int Id { get; set; }
+
+    [Inject]
+    private IQuestionnaireService _questionnaireService { get; set; }
+
+    private QuestionnaireViewModel Questionnaire;
+    private ValidationQuestionnaireViewModel UpdateQuestionnaireModel;
+
+    private bool IsRequestPending = false;
+
+    private IEnumerable<StatusEnum> Statuses;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsRequestPending = true;
+        Questionnaire = await _questionnaireService.GetQuestionnaireById(Id);
+        if (Questionnaire.IsUpdatable() && Questionnaire.OwnerId == stateProvider.GetUserId())
+        {
+            UpdateQuestionnaireModel = new ValidationQuestionnaireViewModel(Questionnaire);
+            if (Questionnaire.Status != StatusEnum.Scheduled)
+            {
+                Statuses = EnumHelper.GetManagableQuestionnaireStatuses();
+            }
+        }
+        else
+        {
+            navigationManager.NavigateTo("*");
+        }
+        IsRequestPending = false;
+    }
+
+    private async void Submit()
+    {
+        IsRequestPending = true;
+        var updatedQuestionnaire = await _questionnaireService.UpdateQuestionnaire(UpdateQuestionnaireModel.ToUpdateViewModel());
+        IsRequestPending = false;
+
+        navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+    }
+}

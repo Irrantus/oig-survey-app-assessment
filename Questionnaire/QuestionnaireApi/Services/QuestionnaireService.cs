@@ -1,7 +1,5 @@
 ﻿using Common.Models;
-using Common.Models.ViewModels;
-using Microsoft.AspNetCore.Http.HttpResults;
-using QuestionnaireApi.Common;
+using Common.Models.ViewModels.Questionnaire;
 using QuestionnaireApi.Models.Dtos;
 using QuestionnaireApi.Repositories;
 
@@ -26,6 +24,11 @@ namespace QuestionnaireApi.Services
                 .ToViewModel();
         }
 
+        public int GetQuestionnairesCountByOwnerId(string ownerId)
+        {
+            return _questionnaireRepository.GetQuestionnairesCountByOwnerId(ownerId);
+        }
+
         public QuestionnaireViewModel CreateQuestionnaire(CreateQuestionnaireViewModel createVieModel)
         {
             var createDto = new CreateQuestionnaireDto(createVieModel);
@@ -43,9 +46,9 @@ namespace QuestionnaireApi.Services
         public QuestionnaireViewModel UpdateQuestionnaire(UpdateQuestionnaireViewModel updateViewModel)
         {
             var updateDto = new UpdateQuestionnaireDto(updateViewModel);
-            var entity = _questionnaireRepository.GetQuestionnaireById(updateDto.Id);
+            var record = _questionnaireRepository.GetQuestionnaireById(updateDto.Id);
 
-            if (entity != null && updateDto.Valid(entity))
+            if (record != null && updateDto.Valid(record))
             {
                 return _questionnaireRepository.UpdateQuestionnaire(updateDto)
                     .ToViewModel();
@@ -54,6 +57,11 @@ namespace QuestionnaireApi.Services
             {
                 throw new BadHttpRequestException("Questionnaire data is not valid");
             }
+        }
+
+        public bool CloseQuestionnaire(int id)
+        {
+            return _questionnaireRepository.CloseQuestionnaire(id);
         }
     }
 }

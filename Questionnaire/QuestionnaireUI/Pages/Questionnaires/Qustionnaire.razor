@@ -1,0 +1,75 @@
+﻿@page "/questionnaire/{Id:int}"
+@using Common.Models.ViewModels.Questionnaire;
+@using QuestionnaireUI.Data.Services;
+@using QuestionnaireUI.Shared.CustomComponents
+
+<BackButton Link="questionnaires" />
+@if (!IsRequestPending)
+{
+    <h3>@Questionnaire.Name</h3>
+    <hr />
+@*    <div class="row">
+        <label for="name">Name</label>
+        <input type="text" readonly id="name" value="@Questionnaire.Name" />
+    </div>
+    <div class="row">
+        <label for="startDate">Start date</label>
+        <input type="text" readonly id="startDate" value="@Questionnaire.StartDate.ToString()" />
+    </div>
+    <div class="row">
+        <label for="endDate">End date</label>
+        <input type="text" readonly id="endDate" value="@Questionnaire.EndDate.ToString()" />
+    </div>
+    <div class="row">
+        <label for="status">Status</label>
+        <input type="text" readonly id="status" value="@Questionnaire.Status.ToString()" />
+    </div>*@
+    <div class="form-group row">
+        <label for="name">Name</label>
+        <InputText disabled id="name" class="form-control"
+            @bind-Value="Questionnaire.Name" />
+    </div>
+    <div class="form-group row">
+        <label for="startDate">Start date</label>
+        <InputDate disabled Type="InputDateType.DateTimeLocal"
+            id="startDate" class="form-control"
+            @bind-Value="Questionnaire.StartDate" />
+    </div>
+    <div class="form-group row">
+        <label for="endDate">End date</label>
+        <InputDate disabled Type="InputDateType.DateTimeLocal"
+            id="endDate" class="form-control"
+            @bind-Value="Questionnaire.EndDate" />
+    </div>
+    <div class="form-group row">
+        <label for="status">Status</label>
+        <InputText disabled id="status" class="form-control"
+            @bind-Value="Questionnaire.StatusString" />
+    </div>
+}
+else
+{
+    <span>Loading Questionnaire</span>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    [Inject]
+    private IQuestionnaireService _questionnaireService { get; set; }
+
+    private QuestionnaireViewModel Questionnaire;
+
+    private string StatusString;
+
+    private bool IsRequestPending = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsRequestPending = true;
+        Questionnaire = await _questionnaireService.GetQuestionnaireById(Id);
+        IsRequestPending = false;
+    }
+}

@@ -1,24 +1,41 @@
 using Auth0.AspNetCore.Authentication;
-using QuestionnaireUI.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.IdentityModel.Tokens;
+using QuestionnaireUI.Data.Helpers;
 using QuestionnaireUI.Data.Services;
+using QuestionnaireUI.Extentions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddAuth0WebAppAuthentication(options => {
-        options.Domain = builder.Configuration.GetSection("Auth0Settings").GetValue<string>("Domain");
-        options.ClientId = builder.Configuration.GetSection("Auth0Settings").GetValue<string>("ClientId");
+        options.Domain = builder.Configuration["Auth0:Domain"];
+        options.ClientId = builder.Configuration["Auth0:ClientId"];
+        options.ClientSecret = builder.Configuration["Auth0:ClientSecret"];
+    })
+    .WithAccessToken(options =>
+    {
+        options.Audience = builder.Configuration["Auth0:Audience"];
     });
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:5000") });
+builder.Services.AddHttpClient("QuestionnaireAPI",
+      client => client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]))
+    .AddHttpMessageHandler<CustomTokenHandler>();
+
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
+  .CreateClient("QuestionnaireAPI"));
+
 builder.Services.AddScoped<IApiService, ApiService>();
 builder.Services.AddTransient<IQuestionnaireService, QuestionnaireService>();
-
-
+builder.Services.AddTransient<IUserService, UserService>();
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CustomTokenHandler>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
 
 var app = builder.Build();
 

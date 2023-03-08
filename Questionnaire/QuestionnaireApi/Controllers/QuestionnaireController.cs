@@ -1,5 +1,5 @@
 using Common.Models;
-using Common.Models.ViewModels;
+using Common.Models.ViewModels.Questionnaire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuestionnaireApi.Common;
@@ -9,6 +9,7 @@ using QuestionnaireApi.Services;
 namespace QuestionnaireApi.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class QuestionnaireController : ControllerBase
     {
@@ -42,9 +43,15 @@ namespace QuestionnaireApi.Controllers
         }
 
         [HttpPut]
-        public QuestionnaireViewModel Get([FromBody] UpdateQuestionnaireViewModel updateModel)
+        public QuestionnaireViewModel Update([FromBody] UpdateQuestionnaireViewModel updateModel)
         {
             return _questionnaireService.UpdateQuestionnaire(updateModel);
+        }
+
+        [HttpPatch("Close/{id}")]
+        public bool CloseQuestionnaire([FromRoute] int id)
+        {
+            return _questionnaireService.CloseQuestionnaire(id);
         }
     }
 }

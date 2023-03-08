@@ -15,5 +15,6 @@ namespace QuestionnaireApi.Data.Entities
         [Required]
         public DateTime EndDate { get; set; }
         public StatusEnum Status { get; set; }
+        public string OwnerId { get; set; } = string.Empty;
     }
 }

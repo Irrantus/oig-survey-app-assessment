@@ -1,0 +1,84 @@
+﻿@page "/create"
+@using Common.Enums;
+@using Common.Models.ViewModels.Questionnaire;
+@using QuestionnaireUI.Data.Helpers;
+@using QuestionnaireUI.Data.Services;
+@using QuestionnaireUI.Extentions;
+@using QuestionnaireUI.Shared.CustomComponents
+
+<BackButton Link="questionnaires" />
+@if (!IsRequestPending)
+{
+    <h3>Create new Questionnaire</h3>
+    <hr />
+
+    <EditForm Model="@Questionnaire" OnValidSubmit=@(() => Submit())>
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+        <div class="form-group row">
+            <label for="name">Name</label>
+            <InputText id="name" class="form-control" @bind-Value="Questionnaire.Name" />
+            <ValidationMessage For="() => Questionnaire.Name" />
+        </div>
+        <div class="form-group row">
+            <label for="startDate">Start date</label>
+            <InputDate Type="InputDateType.DateTimeLocal"
+            id="startDate" class="form-control"
+                   @bind-Value="Questionnaire.StartDate" />
+            <ValidationMessage For="() => Questionnaire.StartDate" />
+        </div>
+        <div class="form-group row">
+            <label for="endDate">End date</label>
+            <InputDate Type="InputDateType.DateTimeLocal"
+            id="endDate" class="form-control"
+            @bind-Value="Questionnaire.EndDate" />
+            <ValidationMessage For="() => Questionnaire.EndDate" />
+        </div>
+        <div class="form-group row">
+            <label for="status">Status</label>
+            <InputSelect id="status" class="form-control"
+                     @bind-Value="Questionnaire.Status">
+                @foreach (var status in Statuses)
+                {
+                    <option value=@status>@status</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Questionnaire.Status" />
+        </div>
+        <br/>
+        <input type="submit" class="btn btn-primary" value="Save"/>
+    </EditForm>
+}
+else
+{
+    <span>Creating Questionnaire</span>
+}
+
+@inject CustomAuthStateProvider stateProvider
+@inject NavigationManager NavigationManager
+
+@code {
+    [Inject]
+    private IQuestionnaireService _questionnaireService { get; set; }
+
+    private CreateQuestionnaireViewModel Questionnaire { get; set; } = new CreateQuestionnaireViewModel();
+
+    private bool IsRequestPending = false;
+
+    private IEnumerable<StatusEnum> Statuses;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Statuses = EnumHelper.GetManagableQuestionnaireStatuses();
+    }
+
+    private async void Submit()
+    {
+        Questionnaire.OwnerId = stateProvider.GetUserId();
+
+        IsRequestPending = true;
+        var createdQuestionnaire = await _questionnaireService.CreateQuestionnaire(Questionnaire);
+
+        NavigationManager.NavigateTo("questionnaires");
+    }
+}

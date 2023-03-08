@@ -1,4 +1,5 @@
-﻿using Common.Models.ViewModels;
+﻿using Common.Enums;
+using Common.Models.ViewModels.Questionnaire;
 using QuestionnaireApi.Data.Entities;
 
 namespace QuestionnaireApi.Models.Dtos
@@ -8,6 +9,8 @@ namespace QuestionnaireApi.Models.Dtos
         public string Name { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public string OwnerId { get; set; } = string.Empty;
+        public StatusEnum Status { get; set; }
 
         public CreateQuestionnaireDto() { }
         public CreateQuestionnaireDto(CreateQuestionnaireViewModel model)
@@ -15,6 +18,8 @@ namespace QuestionnaireApi.Models.Dtos
             Name = model.Name;
             StartDate = model.StartDate;
             EndDate = model.EndDate;
+            OwnerId = model.OwnerId;
+            Status = model.Status;
         }
 
         public Questionnaire ToEntity()
@@ -22,8 +27,10 @@ namespace QuestionnaireApi.Models.Dtos
             return new Questionnaire
             {
                 Name = Name,
-                StartDate = StartDate,
-                EndDate = EndDate
+                StartDate = StartDate.ToUniversalTime(),
+                EndDate = EndDate.ToUniversalTime(),
+                OwnerId = OwnerId,
+                Status = Status
             };
         }
 
@@ -34,7 +41,7 @@ namespace QuestionnaireApi.Models.Dtos
                 return false;
             }
 
-            if (EndDate <= StartDate.AddHours(1))
+            if (EndDate < StartDate.AddHours(1))
             {
                 return false;
             }

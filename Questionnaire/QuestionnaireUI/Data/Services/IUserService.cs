@@ -2,8 +2,8 @@
 
 namespace QuestionnaireUI.Data.Services
 {
-    public interface IApiService
+    public interface IUserService
     {
-        public Task<T> GetAsync<T>(string uri);
+        public Task<List<UserViewModel>> GetUsersAsync();
     }
 }

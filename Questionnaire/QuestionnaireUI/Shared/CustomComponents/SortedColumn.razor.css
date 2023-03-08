@@ -1,0 +1,8 @@
+﻿th {
+    cursor: pointer;
+    user-select: none;
+}
+
+th:hover{
+    background-color: #d6d5d5;
+}

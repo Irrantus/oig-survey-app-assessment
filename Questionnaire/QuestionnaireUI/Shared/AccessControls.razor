@@ -1,8 +1,21 @@
-﻿<AuthorizeView>
+﻿@using QuestionnaireUI.Extentions;
+<AuthorizeView>
     <Authorized>
+        <span>Hello, @Username</span>
         <a href="logout">Log out</a>
     </Authorized>
     <NotAuthorized>
         <a href="login?redirectUri=/">Log in</a>
     </NotAuthorized>
 </AuthorizeView>
+
+@inject CustomAuthStateProvider AuthState
+
+@code {
+    public string Username = "Anonymous User";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Username = await AuthState.GetUserName();
+    }
+}

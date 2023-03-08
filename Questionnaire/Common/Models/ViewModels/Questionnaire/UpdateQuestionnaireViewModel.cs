@@ -1,8 +1,10 @@
 ﻿using Common.Enums;
+using Common.Models.Helpers;
+using System.ComponentModel.DataAnnotations;
 
-namespace Common.Models.ViewModels
+namespace Common.Models.ViewModels.Questionnaire
 {
-    public class QuestionnaireViewModel
+    public class UpdateQuestionnaireViewModel
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

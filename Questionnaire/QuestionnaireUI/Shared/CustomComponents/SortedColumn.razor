@@ -1,0 +1,19 @@
+﻿@using QuestionnaireUI.Data.Models;
+<th scope="col" onclick="@(() => Click())">
+    <span class="sort-link">@Column.Name</span>
+    <span class="oi @(Column.SortStyle)"></span>
+</th>
+
+@code{
+    [Parameter]
+    public Column Column { get; set; } = new Column { Name = "Error" };
+    [Parameter]
+    public string? SortStyle { get; set; }
+    [Parameter]
+    public EventCallback<Column> SortMethod { get; set; }
+
+    private async Task Click()
+    {
+        await SortMethod.InvokeAsync(Column);
+    }
+}

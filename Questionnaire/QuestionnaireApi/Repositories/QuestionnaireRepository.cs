@@ -1,18 +1,16 @@
 ﻿using Common.Enums;
 using Common.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 using QuestionnaireApi.Common;
 using QuestionnaireApi.Data;
-using QuestionnaireApi.Data.Entities;
 using QuestionnaireApi.Models.Dtos;
-using System.Linq;
 
 namespace QuestionnaireApi.Repositories
 {
-    public class QuestionnaireRepository: IQuestionnaireRepository
+    public class QuestionnaireRepository : IQuestionnaireRepository
     {
         private readonly AppDbContext _dbContext;
-        public QuestionnaireRepository(AppDbContext context) {
+        public QuestionnaireRepository(AppDbContext context)
+        {
             _dbContext = context;
         }
 
@@ -40,6 +38,7 @@ namespace QuestionnaireApi.Repositories
                     .Select(q => new QuestionnaireDto(q))
                     .ToList();
             }
+
             return questionnaires;
         }
 
@@ -47,6 +46,21 @@ namespace QuestionnaireApi.Repositories
         {
             var questionnaire = _dbContext.Questionnaires
                 .FirstOrDefault(q => q.Id == id);
+
+            if (questionnaire.StartDate.ToLocalTime() < DateTime.Now
+                && questionnaire.Status != StatusEnum.Concept
+                && questionnaire.Status != StatusEnum.Completed)
+            {
+                if (questionnaire.EndDate.ToLocalTime() > DateTime.Now)
+                {
+                    questionnaire.Status = StatusEnum.Active;
+                }
+                else
+                {
+                    questionnaire.Status = StatusEnum.Completed;
+                }
+                _dbContext.SaveChanges();
+            }
 
             if (questionnaire != null)
             {
@@ -58,21 +72,56 @@ namespace QuestionnaireApi.Repositories
             }
         }
 
+        public int GetQuestionnairesCountByOwnerId(string ownerId)
+        {
+            return _dbContext.Questionnaires.Count(q => q.OwnerId == ownerId);
+        }
+
         public QuestionnaireDto CreateQuestionnaire(CreateQuestionnaireDto dto)
         {
             var entity = dto.ToEntity();
-            entity.Status = StatusEnum.Concept;
 
-            var createdEntity = _dbContext.Questionnaires.Add(entity).Entity;
+            _dbContext.Questionnaires.Add(entity);
             _dbContext.SaveChanges();
 
-            return new QuestionnaireDto(createdEntity);
+            return new QuestionnaireDto(entity);
         }
 
         public QuestionnaireDto UpdateQuestionnaire(UpdateQuestionnaireDto dto)
         {
-            var entity = dto.ToEntity();
-            return new QuestionnaireDto(_dbContext.Questionnaires.Update(entity).Entity);
+            var entity = _dbContext.Questionnaires.FirstOrDefault(q => q.Id == dto.Id);
+
+            if (entity != null)
+            {
+                entity.StartDate = dto.StartDate.ToUniversalTime();
+                entity.EndDate = dto.EndDate.ToUniversalTime();
+                entity.Status = dto.Status;
+
+                _dbContext.Questionnaires.Update(entity);
+
+                _dbContext.SaveChanges();
+
+                return new QuestionnaireDto(entity);
+            }
+            else
+            {
+                throw new Exception("Questionnaire not found");
+            }
+        }
+
+        public bool CloseQuestionnaire(int id)
+        {
+            var entity = _dbContext.Questionnaires.FirstOrDefault(q => q.Id == id);
+
+            if (entity == null)
+            {
+                return false;
+            }
+
+            entity.Status = StatusEnum.Completed;
+
+            _dbContext.SaveChanges();
+            return true;
         }
     }
 }
